@@ -6,4 +6,9 @@ Some compiz patches for xfce4.
 
 - `compiz-core` support `gtk_frame_extents`.
 - `compiz-gnome` support gtk+ theme for `xfce4`.
-- `compiz-plugins-main-default` fix some plugins.
+- `compiz-plugins-default` fix some plugins.
+
+## Authors
+[muktupavels](https://github.com/muktupavels)
+
+[ging-dev](https://github.com/ging-dev)
