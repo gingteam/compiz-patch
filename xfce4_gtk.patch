@@ -1,0 +1,13 @@
+diff --git a/gtk/window-decorator/gwd-settings-storage.c b/gtk/window-decorator/gwd-settings-storage.c
+index 703e9d2..edae4bb 100644
+--- a/gtk/window-decorator/gwd-settings-storage.c
++++ b/gtk/window-decorator/gwd-settings-storage.c
+@@ -483,7 +483,7 @@ gwd_settings_storage_init (GWDSettingsStorage *storage)
+         gint i;
+ 
+         for (i = 0; desktops[i] != NULL; i++) {
+-            if (g_strcmp0 (desktops[i], "GNOME-Flashback") == 0) {
++            if (g_strcmp0 (desktops[i], "GNOME-Flashback") == 0 || g_strcmp0 (desktops[i], "XFCE") == 0) {
+                 storage->current_desktop = GWD_DESKTOP_GNOME_FLASHBACK;
+                 break;
+             } else if (g_strcmp0 (desktops[i], "MATE") == 0) {

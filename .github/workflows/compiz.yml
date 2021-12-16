@@ -1,0 +1,36 @@
+name: "compiz"
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout source code"
+        uses: "actions/checkout@v2.3.4"
+        with:
+          lfs: true
+          fetch-depth: 0
+      - name: "Update deps"
+        run: |
+          sudo sed -i '/deb-src/s/^# //' /etc/apt/sources.list && sudo apt update
+          sudo apt install devscripts
+          apt source compiz
+          sudo apt build-dep compiz
+          ls
+      - name: "Compiz build"
+        run: |
+          cd compiz-0.9.14.1+20.04.20200211
+          patch -p1 < ../gtk_frame.patch
+          patch -p1 < ../xfce4_gtk.patch
+          sudo debuild -b -uc -us
+          cd ..
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            *.deb
