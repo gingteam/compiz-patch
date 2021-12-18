@@ -15,7 +15,7 @@ index d5afc21..358a91d 100755
  	XWindowChanges wc = xwc;
  
 diff --git a/plugins/move/src/move.cpp b/plugins/move/src/move.cpp
-index c9f51b0..11232dd 100644
+index c9f51b0..2e1be97 100644
 --- a/plugins/move/src/move.cpp
 +++ b/plugins/move/src/move.cpp
 @@ -376,6 +376,10 @@ moveHandleMotionEvent (CompScreen *s,
@@ -90,10 +90,27 @@ index 14cad58..da77b6f 100644
  					     int height,
  					     int *newWidth,
 diff --git a/plugins/resize/src/logic/src/resize-logic.cpp b/plugins/resize/src/logic/src/resize-logic.cpp
-index a37e3d2..095307f 100644
+index a37e3d2..c5f8eeb 100644
 --- a/plugins/resize/src/logic/src/resize-logic.cpp
 +++ b/plugins/resize/src/logic/src/resize-logic.cpp
-@@ -640,11 +640,17 @@ ResizeLogic::getPaintRectangle (BoxPtr pBox)
+@@ -513,10 +513,15 @@ ResizeLogic::handleMotionEvent (int xRoot, int yRoot)
+ 
+ 	snapWindowToWorkAreaBoundaries (wi, he, wX, wY, wWidth, wHeight);
+ 
+-	if (isConstrained)
++	if (isConstrained) {
++	    wX += w->clientFrame ().left;
++	    wY += w->clientFrame ().top;
++	    wWidth -= w->clientFrame ().left + w->clientFrame ().right;
++	    wHeight -= w->clientFrame ().top + w->clientFrame ().bottom;
+ 	    limitMovementToConstraintRegion (wi, he, /*in/out*/
+ 					     xRoot, yRoot,
+ 					     wX, wY, wWidth, wHeight); /*in*/
++	}
+ 
+ 	if (mode != ResizeOptions::ModeNormal &&
+ 	    mode != ResizeOptions::ModeOutline)
+@@ -640,11 +645,17 @@ ResizeLogic::getPaintRectangle (BoxPtr pBox)
      pBox->x2 = geometry.x + geometry.width +
  	       w->serverGeometry ().border () * 2 + w->border ().right;
  
@@ -102,17 +119,49 @@ index a37e3d2..095307f 100644
 +    pBox->x2 -= w->clientFrame ().right;
 +
      if (w->shaded ())
--	pBox->y2 = geometry.y + w->size ().height () + w->border ().bottom;
-+		pBox->y2 = geometry.y + w->size ().height () + w->border ().bottom;
+ 	pBox->y2 = geometry.y + w->size ().height () + w->border ().bottom;
      else
--	pBox->y2 = geometry.y + geometry.height +
-+		pBox->y2 = geometry.y + geometry.height +
+ 	pBox->y2 = geometry.y + geometry.height +
  		   w->serverGeometry ().border () * 2 + w->border ().bottom;
 +
 +    pBox->y2 -= w->clientFrame ().bottom;
  }
  
  void
+@@ -899,14 +910,14 @@ ResizeLogic::constrainToWorkArea (int &che, int &cwi)
+     if (mask & ResizeUpMask)
+     {
+ 	int decorTop = savedGeometry.y + savedGeometry.height -
+-	    (che + w->border ().top);
++	    (che + w->border ().top - w->clientFrame ().top);
+ 
+ 	if (grabWindowWorkArea->y () > decorTop)
+ 	    che -= grabWindowWorkArea->y () - decorTop;
+     }
+     if (mask & ResizeDownMask)
+     {
+-	int decorBottom = savedGeometry.y + che + w->border ().bottom;
++	int decorBottom = savedGeometry.y + che + w->border ().bottom - w->clientFrame ().bottom;
+ 
+ 	if (decorBottom >
+ 	    grabWindowWorkArea->y () + grabWindowWorkArea->height ())
+@@ -916,14 +927,14 @@ ResizeLogic::constrainToWorkArea (int &che, int &cwi)
+     if (mask & ResizeLeftMask)
+     {
+ 	int decorLeft = savedGeometry.x + savedGeometry.width -
+-	    (cwi + w->border ().left);
++	    (cwi + w->border ().left - w->clientFrame ().left);
+ 
+ 	if (grabWindowWorkArea->x () > decorLeft)
+ 	    cwi -= grabWindowWorkArea->x () - decorLeft;
+     }
+     if (mask & ResizeRightMask)
+     {
+-	int decorRight = savedGeometry.x + cwi + w->border ().right;
++	int decorRight = savedGeometry.x + cwi + w->border ().right - w->clientFrame ().right;
+ 
+ 	if (decorRight >
+ 	    grabWindowWorkArea->x () + grabWindowWorkArea->width ())
 diff --git a/plugins/resize/src/window-impl.h b/plugins/resize/src/window-impl.h
 index 0a52baf..6c13c48 100644
 --- a/plugins/resize/src/window-impl.h
@@ -130,7 +179,7 @@ index 0a52baf..6c13c48 100644
  					     int height,
  					     int *newWidth,
 diff --git a/src/screen.cpp b/src/screen.cpp
-index 8323ec4..06a81b8 100644
+index 8323ec4..7a56b91 100644
 --- a/src/screen.cpp
 +++ b/src/screen.cpp
 @@ -2589,6 +2589,7 @@ CompScreenImpl::_addSupportedAtoms (std::vector<Atom> &atoms)
